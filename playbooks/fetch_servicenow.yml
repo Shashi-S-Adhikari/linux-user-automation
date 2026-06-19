@@ -1,0 +1,52 @@
+- name: Get RITM details
+  uri:
+    url: "https://{{ snow_instance }}/api/now/table/sc_req_item?sysparm_query=number={{ ritm_number }}"
+    method: GET
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    force_basic_auth: yes
+    return_content: yes
+  register: ritm_result
+
+- name: Extract sys_id
+  set_fact:
+    ritm_sys_id: "{{ ritm_result.json.result[0].sys_id }}"
+
+- name: Get variable mappings
+  uri:
+    url: "https://{{ snow_instance }}/api/now/table/sc_item_option_mtom?sysparm_query=request_item={{ ritm_sys_id }}"
+    method: GET
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    force_basic_auth: yes
+    return_content: yes
+  register: variable_mappings
+
+- name: Get full variable details
+  uri:
+    url: "https://{{ snow_instance }}/api/now/table/sc_item_option/{{ item.sc_item_option.value }}"
+    method: GET
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    force_basic_auth: yes
+    return_content: yes
+  loop: "{{ variable_mappings.json.result }}"
+  register: var_details
+
+- name: Extract server_ip
+  set_fact:
+    server_ip: "{{ item.json.result.value }}"
+  when: item.json.result.order == "2"
+  loop: "{{ var_details.results }}"
+
+- name: Extract username
+  set_fact:
+    username: "{{ item.json.result.value }}"
+  when: item.json.result.order == "3"
+  loop: "{{ var_details.results }}"
+
+- name: Extract group
+  set_fact:
+    group: "{{ item.json.result.value }}"
+  when: item.json.result.order == "1"
+  loop: "{{ var_details.results }}"
