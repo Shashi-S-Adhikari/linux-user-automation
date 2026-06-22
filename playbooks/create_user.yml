@@ -14,7 +14,7 @@
         msg:
           - "Username: {{ username }}"
           - "Server IP: {{ server_ip }}"
-          - "Group: {{ group }}"
+          - "Group: {{ user_group }}"
 
     - name: Add dynamic host
       add_host:
@@ -23,7 +23,9 @@
         ansible_user: ec2-user
         ansible_ssh_private_key_file: ~/.ssh/id_rsa
         username: "{{ username }}"
-        group: "{{ group }}"
+        user_group: "{{ user_group }}"
+
+# ✅ PLAY 2
 
 - name: Create Linux User
   hosts: target_server
@@ -32,7 +34,9 @@
 
   roles:
     - create_user
-# ✅ PLAY 3: Update ServiceNow (Work Notes + Close RITM)
+
+# ✅ PLAY 3
+
 - name: Update ServiceNow Ticket
   hosts: localhost
   gather_facts: no
@@ -41,8 +45,7 @@
     - ../vars/servicenow.yml
 
   tasks:
-
-    - name: Update Work Notes and Close RITM
+    - name: Get RITM details again
       uri:
         url: "https://{{ snow_instance }}/api/now/table/sc_req_item?sysparm_query=number={{ ritm_number }}"
         method: GET
@@ -67,6 +70,6 @@
           Content-Type: "application/json"
         body_format: json
         body:
-          work_notes: "✅ User {{ username }} created successfully on {{ server_ip }} and added to {{ group }}"
-          state: "3"        # ✅ Closed Complete
+          work_notes: "✅ User {{ username }} created successfully on {{ server_ip }} and added to {{ user_group }}"
+          state: "3"
         status_code: 200

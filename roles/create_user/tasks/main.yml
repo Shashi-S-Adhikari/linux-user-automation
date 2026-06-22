@@ -1,28 +1,18 @@
 - name: Fail if variables missing
   fail:
-    msg: "Required variables missing from ServiceNow"
+    msg: "Required variables are missing"
   when:
     - username is not defined or username == ""
-    - group is not defined or group == ""
+    - user_group is not defined or user_group == ""
 
 - name: Create group
   group:
-    name: "{{ group }}"
+    name: "{{ user_group }}"
     state: present
 
 - name: Create user
   user:
     name: "{{ username }}"
-    group: "{{ group }}"
-    shell: /bin/bash
+    group: "{{ user_group }}"
+    state: present
     create_home: yes
-
-- name: Verify user
-  command: id "{{ username }}"
-  register: user_check
-  changed_when: false
-
-- name: Show user details
-  debug:
-    var: user_check.stdout
-
