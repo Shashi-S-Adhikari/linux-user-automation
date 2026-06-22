@@ -70,6 +70,6 @@
           Content-Type: "application/json"
         body_format: json
         body:
-          work_notes: "✅ User {{ username }} created successfully on {{ server_ip }} and added to {{ user_group }}"
+          work_notes: " User {{ username }} created successfully on {{ server_ip }} and added to {{ user_group }}"
           state: "3"
         status_code: 200
