@@ -1,5 +1,7 @@
 ---
 
+# ✅ PLAY 1: FETCH SERVICENOW DATA
+
 - name: Fetch variables from ServiceNow
   hosts: localhost
   gather_facts: no
@@ -9,6 +11,11 @@
 
   tasks:
     - import_tasks: fetch_servicenow.yml
+
+    - name: Show fetched RITM number ✅
+      debug:
+        msg: "Fetched RITM Number: {{ ritm_number }}"
+
 
     - name: Show extracted values
       debug:
@@ -26,7 +33,7 @@
         username: "{{ username }}"
         user_group: "{{ user_group }}"
 
-# ✅ PLAY 2
+# ✅ PLAY 2: USER CREATION
 
 - name: Create Linux User
   hosts: target_server
@@ -36,8 +43,7 @@
   roles:
     - create_user
 
-
-# ✅ PLAY 3
+# ✅ PLAY 3: UPDATE SERVICENOW
 
 - name: Update ServiceNow Ticket
   hosts: localhost
@@ -47,6 +53,7 @@
     - ../vars/servicenow.yml
 
   tasks:
+
     - name: Get RITM details again
       uri:
         url: "https://{{ snow_instance }}/api/now/table/sc_req_item?sysparm_query=number={{ ritm_number }}"
@@ -61,8 +68,6 @@
       set_fact:
         ritm_sys_id: "{{ ritm_data.json.result[0].sys_id }}"
 
-    # ✅ UPDATED WORK NOTES (IMPORTANT 🔥)
-
     - name: Update Work Notes and Close Request
       uri:
         url: "https://{{ snow_instance }}/api/now/table/sc_req_item/{{ ritm_sys_id }}"
@@ -76,10 +81,9 @@
         body:
           work_notes: >
             {% if hostvars['target_server']['user_exists'] %}
-            User {{ username }} already exists on {{ server_ip }} and belongs to {{ user_group }}
+            User {{ username }} already exists on {{ server_ip }}
             {% else %}
-            User {{ username }} created successfully on {{ server_ip }} and added to {{ user_group }}
+            User {{ username }} created successfully on {{ server_ip }}
             {% endif %}
           state: "3"
         status_code: 200
-

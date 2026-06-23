@@ -1,11 +1,14 @@
+---
+
 - name: Fail if variables missing
   fail:
     msg: "Required variables are missing"
   when:
     - username is not defined or username == ""
     - user_group is not defined or user_group == ""
+    - server_ip is not defined or server_ip == ""
 
-# ✅ Check if user already exists
+# ✅ Check if user exists
 - name: Check if user exists
   command: id {{ username }}
   register: user_check
@@ -16,7 +19,7 @@
   set_fact:
     user_exists: "{{ user_check.rc == 0 }}"
 
-# ✅ Create group (only if user not exists)
+# ✅ Create group (only if not exists)
 - name: Create group
   group:
     name: "{{ user_group }}"
@@ -31,13 +34,3 @@
     state: present
     create_home: yes
   when: not user_exists
-
-# ✅ Display result
-- name: Show result
-  debug:
-    msg: >
-      {% if user_exists %}
-      User {{ username }} already exists in the system
-      {% else %}
-      User {{ username }} created successfully
-      {% endif %}

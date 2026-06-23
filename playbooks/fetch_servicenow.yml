@@ -1,3 +1,25 @@
+---
+
+# ✅ STEP 1: FETCH LATEST RITM (NO HARDCODING)
+
+- name: Fetch latest RITM dynamically
+  uri:
+    url: "https://{{ snow_instance }}/api/now/table/sc_req_item?sysparm_query=ORDERBYDESCsys_created_on&sysparm_limit=1"
+    method: GET
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    force_basic_auth: yes
+    return_content: yes
+  register: latest_ritm
+
+# ✅ STEP 2: SET RITM NUMBER
+
+- name: Set RITM number
+  set_fact:
+    ritm_number: "{{ latest_ritm.json.result[0].number }}"
+
+# ✅ STEP 3: GET RITM DETAILS
+
 - name: Get RITM details
   uri:
     url: "https://{{ snow_instance }}/api/now/table/sc_req_item?sysparm_query=number={{ ritm_number }}"
@@ -8,9 +30,13 @@
     return_content: yes
   register: ritm_result
 
+# ✅ STEP 4: EXTRACT SYS_ID
+
 - name: Extract sys_id
   set_fact:
     ritm_sys_id: "{{ ritm_result.json.result[0].sys_id }}"
+
+# ✅ STEP 5: GET VARIABLE MAPPING
 
 - name: Get variable mappings
   uri:
@@ -21,6 +47,8 @@
     force_basic_auth: yes
     return_content: yes
   register: variable_mappings
+
+# ✅ STEP 6: GET FULL VARIABLE DETAILS
 
 - name: Get full variable details
   uri:
@@ -33,7 +61,7 @@
   loop: "{{ variable_mappings.json.result }}"
   register: var_details
 
-# ✅ CORRECT VARIABLE EXTRACTION ✅
+# ✅ STEP 7: EXTRACT VALUES
 
 - name: Extract group
   set_fact:
