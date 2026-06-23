@@ -5,14 +5,39 @@
     - username is not defined or username == ""
     - user_group is not defined or user_group == ""
 
+# ✅ Check if user already exists
+- name: Check if user exists
+  command: id {{ username }}
+  register: user_check
+  ignore_errors: yes
+
+# ✅ Set flag
+- name: Set user existence flag
+  set_fact:
+    user_exists: "{{ user_check.rc == 0 }}"
+
+# ✅ Create group (only if user not exists)
 - name: Create group
   group:
     name: "{{ user_group }}"
     state: present
+  when: not user_exists
 
+# ✅ Create user (only if not exists)
 - name: Create user
   user:
     name: "{{ username }}"
     group: "{{ user_group }}"
     state: present
     create_home: yes
+  when: not user_exists
+
+# ✅ Display result
+- name: Show result
+  debug:
+    msg: >
+      {% if user_exists %}
+      User {{ username }} already exists in the system
+      {% else %}
+      User {{ username }} created successfully
+      {% endif %}
